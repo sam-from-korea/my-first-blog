@@ -1,9 +1,12 @@
-from django.shortcuts import render
-from django.utils import timezone
-from .models import Post
 from django.shortcuts import render, get_object_or_404
-from .forms import PostForm
+from django.utils import timezone
 from django.shortcuts import redirect
+from rest_framework import viewsets
+from rest_framework.permissions import IsAuthenticated
+from django.contrib.auth.models import User
+from .models import Post
+from .forms import PostForm
+from .serializers import PostSerializer, UserSerializer
 
 # Create your views here.
 
@@ -41,3 +44,15 @@ def post_edit(request, pk):
     else:
         form = PostForm(instance=post)
     return render(request, 'blog/post_edit.html', {'form': form})
+
+class IntruderImage(viewsets.ModelViewSet):
+    queryset = Post.objects.all()
+    serializer_class = PostSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
+    
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
